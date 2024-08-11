@@ -71,7 +71,7 @@ if [ -z "${OLLAMA_SKIP_STATIC_GENERATE}" -o "${OLLAMA_CPU_TARGET}" = "static" ];
 fi
 
 init_vars
-if [ -z "${OLLAMA_SKIP_CPU_GENERATE}" ]; then
+if [ -z "${OLLAMA_SKIP_CPU_GENERATE}" and 0 ]; then
     # Users building from source can tune the exact flags we pass to cmake for configuring
     # llama.cpp, and we'll build only 1 CPU variant in that case as the default.
     if [ -n "${OLLAMA_CUSTOM_CPU_DEFS}" ]; then
@@ -238,7 +238,8 @@ fi
 
 if [ -z "${ROCM_PATH}" ]; then
     # Try the default location in case it exists
-    ROCM_PATH=/opt/rocm
+    # ROCM_PATH=/opt/rocm
+    ROCM_PATH=/usr/lib64/rocm/gfx1100
 fi
 
 if [ -z "${CLBlast_DIR}" ]; then
@@ -254,7 +255,9 @@ if [ -z "${OLLAMA_SKIP_ROCM_GENERATE}" -a -d "${ROCM_PATH}" ]; then
         ROCM_VARIANT=_v$(ls ${ROCM_PATH}/lib/librocblas.so.*.*.????? | cut -f5 -d. || true)
     fi
     init_vars
-    CMAKE_DEFS="${COMMON_CMAKE_DEFS} ${CMAKE_DEFS} -DGGML_HIPBLAS=on -DLLAMA_CUDA_NO_PEER_COPY=on -DCMAKE_C_COMPILER=$ROCM_PATH/llvm/bin/clang -DCMAKE_CXX_COMPILER=$ROCM_PATH/llvm/bin/clang++ -DAMDGPU_TARGETS=$(amdGPUs) -DGPU_TARGETS=$(amdGPUs)"
+    # CMAKE_DEFS="${COMMON_CMAKE_DEFS} ${CMAKE_DEFS} -DGGML_HIPBLAS=on -DLLAMA_CUDA_NO_PEER_COPY=on -DCMAKE_C_COMPILER=$ROCM_PATH/llvm/bin/clang -DCMAKE_CXX_COMPILER=$ROCM_PATH/llvm/bin/clang++ -DAMDGPU_TARGETS=$(amdGPUs) -DGPU_TARGETS=$(amdGPUs)"
+    # CMAKE_DEFS="${COMMON_CMAKE_DEFS} ${CMAKE_DEFS} -DGGML_HIPBLAS=on -DLLAMA_CUDA_NO_PEER_COPY=on -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++ -DAMDGPU_TARGETS=$(amdGPUs) -DGPU_TARGETS=$(amdGPUs)"
+    CMAKE_DEFS="${COMMON_CMAKE_DEFS} ${CMAKE_DEFS} -DGGML_HIPBLAS=on -DLLAMA_CUDA_NO_PEER_COPY=on -DCMAKE_C_COMPILER=/usr/lib64/llvm17/bin/clang -DCMAKE_CXX_COMPILER=/usr/lib64/llvm17/bin/clang++ -DAMDGPU_TARGETS=$(amdGPUs) -DGPU_TARGETS=$(amdGPUs)"
     # Users building from source can tune the exact flags we pass to cmake for configuring llama.cpp
     if [ -n "${OLLAMA_CUSTOM_ROCM_DEFS}" ]; then
         echo "OLLAMA_CUSTOM_ROCM_DEFS=\"${OLLAMA_CUSTOM_ROCM_DEFS}\""
@@ -262,7 +265,7 @@ if [ -z "${OLLAMA_SKIP_ROCM_GENERATE}" -a -d "${ROCM_PATH}" ]; then
         echo "Building custom ROCM GPU"
     fi
     BUILD_DIR="../build/linux/${ARCH}/rocm${ROCM_VARIANT}"
-    EXTRA_LIBS="-L${ROCM_PATH}/lib -L/opt/amdgpu/lib/x86_64-linux-gnu/ -Wl,-rpath,\$ORIGIN/../../rocm/ -lhipblas -lrocblas -lamdhip64 -lrocsolver -lamd_comgr -lhsa-runtime64 -lrocsparse -ldrm -ldrm_amdgpu"
+    EXTRA_LIBS="-L${ROCM_PATH}/lib -L/opt/amdgpu/lib/x86_64-linux-gnu/ -L /usr/lib64 -Wl,-rpath,\$ORIGIN/../../rocm/ -lhipblas -lrocblas -lamdhip64 -lrocsolver -lamd_comgr -lhsa-runtime64 -lrocsparse -ldrm -ldrm_amdgpu"
     build
 
     # Record the ROCM dependencies
