@@ -649,7 +649,7 @@ func GetDevicesFromRunner(ctx context.Context, runner BaseRunner) ([]DeviceInfo,
 
 			resp, err := http.DefaultClient.Do(r)
 			if err != nil {
-				// slog.Warn("failed to send request", "error", err)
+				slog.Warn("failed to send request", "error", err)
 				if runner.HasExited() {
 					return nil, fmt.Errorf("runner crashed")
 				}

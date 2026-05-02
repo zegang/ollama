@@ -132,6 +132,14 @@ set(WINDOWS_AMDGPU_TARGETS_EXCLUDE_REGEX "^gfx(908|90a|1200|1201):xnack[+-]$"
     "Regular expression describing AMDGPU_TARGETS not supported on Windows. Override to force building these targets. Default \"^gfx(908|90a|1200|1201):xnack[+-]$\"."
 )
 
+# Check for ROCm (AMD GPU) support
+# find_package(ROCm REQUIRED)
+
+# if(ROCm_FOUND)
+#     set(AMDGPU_TARGETS "gfx1100")
+#     message(STATUS "Automatically targeting the following AMD GPUs: ${AMDGPU_TARGETS}")
+# endif()
+
 check_language(HIP)
 if(CMAKE_HIP_COMPILER)
     set(HIP_PLATFORM "amd")
@@ -143,6 +151,12 @@ if(CMAKE_HIP_COMPILER)
 
     if(WIN32 AND WINDOWS_AMDGPU_TARGETS_EXCLUDE_REGEX)
         list(FILTER AMDGPU_TARGETS EXCLUDE REGEX ${WINDOWS_AMDGPU_TARGETS_EXCLUDE_REGEX})
+    endif()
+
+    if(AMDGPU_TARGETS)
+        message(STATUS "AMDGPU_TARGETS is set to: ${AMDGPU_TARGETS}")
+    else()
+        message(STATUS "AMDGPU_TARGETS is not set.")
     endif()
 
     if(AMDGPU_TARGETS)

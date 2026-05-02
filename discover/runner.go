@@ -52,7 +52,10 @@ func GPUDevices(ctx context.Context, runners []ml.FilteredRunnerDiscovery) []ml.
 		if eval, err := filepath.EvalSymlinks(exe); err == nil {
 			exe = eval
 		}
-		files, err := filepath.Glob(filepath.Join(ml.LibOllamaPath, "*", "*ggml-*"))
+		pattern := filepath.Join(ml.LibOllamaPath, "*", "lib*ggml-*")
+		slog.Info("Gathering GPUs through libs matching pattern ", "pattern", pattern)
+		files, err := filepath.Glob(pattern)
+		slog.Info("Gathering GPUs through ", "ml.LibOllamaPath", ml.LibOllamaPath, "files", files)
 		if err != nil {
 			slog.Debug("unable to lookup runner library directories", "error", err)
 		}
@@ -78,6 +81,7 @@ func GPUDevices(ctx context.Context, runners []ml.FilteredRunnerDiscovery) []ml.
 		// are enumerated, but not actually supported.
 		// We run this in serial to avoid potentially initializing a GPU multiple
 		// times concurrently leading to memory contention
+		slog.Info("Gathering GPUs through ", "libDirs", libDirs)
 		for dir := range libDirs {
 			// Typically bootstrapping takes < 1s, but on some systems, with devices
 			// in low power/idle mode, initialization can take multiple seconds.  We
@@ -93,6 +97,7 @@ func GPUDevices(ctx context.Context, runners []ml.FilteredRunnerDiscovery) []ml.
 				bootstrapTimeout = 90 * time.Second
 			}
 			var dirs []string
+			slog.Info("Gathering GPUs through ", "dir", dir)
 			if dir != "" {
 				if requested != "" && !strings.HasPrefix(requested, "mlx_") && filepath.Base(dir) != requested {
 					slog.Debug("skipping available library at user's request", "requested", requested, "libDir", dir)
@@ -110,7 +115,7 @@ func GPUDevices(ctx context.Context, runners []ml.FilteredRunnerDiscovery) []ml.
 			} else {
 				dirs = []string{ml.LibOllamaPath}
 			}
-
+			slog.Info("Gathering GPUs through ", "dirs", dirs)
 			ctx1stPass, cancel := context.WithTimeout(ctx, bootstrapTimeout)
 			// For this pass, we retain duplicates in case any are incompatible with some libraries
 			devices = append(devices, bootstrapDevicesWithMetalRetry(ctx1stPass, ctx, bootstrapTimeout, dirs, nil)...)
